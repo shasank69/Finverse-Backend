@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./Schema/Authentication/auth.js');
 const chatRoutes = require('./Schema/Authentication/chat.js');
 const playlistRoutes = require('./Schema/Authentication/playlist.js');
+const assignmentRoutes = require('./Schema/Authentication/assignment.js');
 
 dotenv.config();
 const app = express();
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/playlist', playlistRoutes);
+app.use('/assignment', assignmentRoutes);
 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,

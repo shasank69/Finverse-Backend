@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 const User = require('../schema.js');
+const fetch = require('node-fetch');
 require('dotenv').config();
 
 function isFinancialQuery(message) {
@@ -11,7 +12,16 @@ function isFinancialQuery(message) {
 
 function isVideoRequest(message) {
   const lower = message.toLowerCase();
-  return lower.includes('videos') || lower.includes('youtube') || lower.includes('playlist');
+  return (
+    lower.includes('suggest') && (lower.includes('video') || lower.includes('youtube')) ||
+    lower.includes('give me videos') ||
+    lower.includes('recommend videos') ||
+    lower.includes('finance playlist')
+  );
+}
+
+function isAssignmentRequest(message) {
+  return message.toLowerCase().includes('assignment');
 }
 
 router.post('/chat', async (req, res) => {
@@ -26,6 +36,20 @@ router.post('/chat', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     user.chatHistory.push({ role: 'user', message, timestamp: new Date() });
+
+    if (isAssignmentRequest(message)) {
+      const response = await fetch(`http://localhost:5000/assignment/assignment/start/${email}`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      await user.save();
+      return res.status(200).json({
+        success: true,
+        assistantReply: 'Here are your 5 assignment questions.',
+        assignment: data.assignments,
+        chatHistory: user.chatHistory
+      });
+    }
 
     if (!isFinancialQuery(message)) {
       await user.save();
