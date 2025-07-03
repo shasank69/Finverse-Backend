@@ -9,12 +9,11 @@ function isFinancialQuery(message) {
   return keywords.some(k => message.toLowerCase().includes(k));
 }
 
-function isVideoRequest(message) {
-  const lower = message.toLowerCase();
-  return lower.includes('videos') || lower.includes('youtube') || lower.includes('playlist');
+function isValidYouTubeURL(url) {
+  return /^https:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]{11}$/.test(url);
 }
 
-router.post('/chat', async (req, res) => {
+router.post('/playlist', async (req, res) => {
   const { email, message } = req.body;
 
   if (!email || !message) {
@@ -25,50 +24,25 @@ router.post('/chat', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    user.chatHistory.push({ role: 'user', message, timestamp: new Date() });
-
     if (!isFinancialQuery(message)) {
-      await user.save();
-      return res.status(200).json({
-        success: true,
-        assistantReply: "Sorry, I can only assist with finance-related questions.",
-        chatHistory: user.chatHistory
-      });
+      return res.status(400).json({ error: 'Only finance-related videos are allowed.' });
     }
 
-    if (isVideoRequest(message)) {
-      await user.save();
-      return res.status(200).json({
-        success: true,
-        playlistRequested: true,
-        message: "This looks like a video request. Forwarding to playlist handler..."
-      });
-    }
-
-    const aboutFields = [
+    const userProfile = [
       user.about1, user.about2, user.about3, user.about4, user.about5,
       user.about6, user.about7, user.about8, user.about9, user.about10
-    ].filter(Boolean);
-
-    const userProfile = aboutFields.length > 0
-      ? `User's Financial Background:\n${aboutFields.map((a, i) => `About${i + 1}: ${a}`).join('\n')}`
-      : 'No profile information provided. Assume general financial background.';
+    ].filter(Boolean).join('\n') || 'No profile info provided. Assume general finance background.';
 
     const systemPrompt = `
 You are a financial assistant.
-ONLY reply to finance-related questions.
-Ignore unrelated questions.
-Use the user's profile below if relevant:
+ONLY return 3–5 VALID full YouTube links related to the user's query. Format:
+https://www.youtube.com/watch?v=XXXXXXXXXXX
 
-${userProfile}
+Do NOT explain. Do NOT generate fake links.
 `;
 
     const messages = [
       { role: "system", content: systemPrompt },
-      ...user.chatHistory.map(chat => ({
-        role: chat.role,
-        content: chat.message
-      })),
       { role: "user", content: message }
     ];
 
@@ -88,6 +62,23 @@ ${userProfile}
 
     const assistantReply = response.data.choices[0].message.content.trim();
 
+    const urls = Array.from(
+      assistantReply.matchAll(/https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}/g)
+    ).map(match => match[0]);
+
+    const validUrls = urls.filter(isValidYouTubeURL);
+    const playlists = validUrls.slice(0, 5).map(url => ({ url }));
+
+    if (playlists.length === 0) {
+      return res.status(200).json({
+        success: true,
+        assistantReply: 'No valid finance-related YouTube videos found.',
+        playlists: [],
+        chatHistory: user.chatHistory
+      });
+    }
+
+    user.playlists = playlists;
     user.chatHistory.push({
       role: 'assistant',
       message: assistantReply,
@@ -99,11 +90,12 @@ ${userProfile}
     res.status(200).json({
       success: true,
       assistantReply,
+      playlists,
       chatHistory: user.chatHistory
     });
 
   } catch (error) {
-    console.error('❌ Chat error:', error?.response?.data || error.message || error);
+    console.error('❌ Playlist error:', error?.response?.data || error.message || error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
