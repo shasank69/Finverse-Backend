@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const User = require('../schema.js');
 const fetch = require('node-fetch');
-
-router.post('/assignment/start/:email', async (req, res) => {
+const app = express();
+app.use(express.json()); 
+router.post('/start/:email', async (req, res) => {
   const { email } = req.params;
 
   try {
@@ -67,7 +68,7 @@ router.post('/assignment/start/:email', async (req, res) => {
   }
 });
 
-router.post('/assignment/submit/:email', async (req, res) => {
+router.post('/submit/:email', async (req, res) => {
   const { email } = req.params;
   const { answers } = req.body;
 

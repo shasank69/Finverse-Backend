@@ -2,6 +2,9 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 const User = require('../schema.js');
+const app = express();
+app.use(express.json()); 
+
 require('dotenv').config();
 
 function isFinancialQuery(message) {

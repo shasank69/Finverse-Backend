@@ -55,7 +55,7 @@ router.get('/login', async (req, res) => {
 });
 
 router.post('/update/:email/:field', async (req, res) => {
-  const { email, field } = req.query;
+  const { email, field } = req.params;
   const value = req.body.value;
 
   if (!/^about([1-9]|10)$/.test(field))

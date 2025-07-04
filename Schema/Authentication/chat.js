@@ -3,6 +3,9 @@ const axios = require('axios');
 const router = express.Router();
 const User = require('../schema.js');
 const fetch = require('node-fetch');
+const app = express();
+app.use(express.json()); 
+
 require('dotenv').config();
 
 function isFinancialQuery(message) {
@@ -24,7 +27,7 @@ function isAssignmentRequest(message) {
   return message.toLowerCase().includes('assignment');
 }
 
-router.post('/chat', async (req, res) => {
+router.post('/', async (req, res) => {
   const { email, message } = req.body;
 
   if (!email || !message) {

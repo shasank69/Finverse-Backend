@@ -5,7 +5,7 @@ const assignmentSchema = new mongoose.Schema({
   question: { type: String, required: true },
   options: {
     type: [String],
-    validate: [val => val.length === 4],
+    validate: [val => val.length === 4, 'Exactly 4 options required'],
     required: true
   },
   correctAnswer: { type: String, required: true },
@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   confirmPassword: { type: String, required: true },
+
   about1: { type: String, maxlength: 250, default: '' },
   about2: { type: String, maxlength: 250, default: '' },
   about3: { type: String, maxlength: 250, default: '' },
@@ -44,15 +45,18 @@ const userSchema = new mongoose.Schema({
   about8: { type: String, maxlength: 250, default: '' },
   about9: { type: String, maxlength: 250, default: '' },
   about10: { type: String, maxlength: 250, default: '' },
+
   playlists: {
     type: [playlistSchema],
-    validate: [val => val.length <= 5],
+    validate: [val => val.length <= 5, 'Max 5 playlists allowed'],
     default: []
   },
+
   chatHistory: {
     type: [chatSchema],
     default: []
   },
+
   assignments: {
     type: [assignmentSchema],
     default: []

@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./Schema/Authentication/auth.js');
 const chatRoutes = require('./Schema/Authentication/chat.js');
 const playlistRoutes = require('./Schema/Authentication/playlist.js');
-const assignmentRoutes = require('./Schema/Authentication/assignment.js');
+const assignmentRoutes = require('./Schema/Authentication/quiz.js');
 
 dotenv.config();
 const app = express();
