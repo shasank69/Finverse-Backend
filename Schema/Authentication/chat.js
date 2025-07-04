@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
     user.chatHistory.push({ role: 'user', message, timestamp: new Date() });
 
     if (isAssignmentRequest(message)) {
-      const response = await fetch(`http://localhost:5000/assignment/assignment/start/${email}`, {
+      const response = await fetch(`https://finverse-backend-fbxo.onrender.com/assignment/start/${email}`, {
         method: 'POST'
       });
       const data = await response.json();
